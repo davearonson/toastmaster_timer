@@ -24,3 +24,12 @@ Features:
 
 - Lets you hide the exact time and status, and show only the color
   ("contest mode")
+
+Since Github won't serve up raw HTML as such (rather than show it to you), you
+can use it at:
+
+  https://dl.dropbox.com/u/9324440/timer.html
+
+It's been a while since I've done anything with this.  I know I should make the
+JS "unobtrusive", and probably use CSS to change the colors and such, but I
+didn't know about those things when I wrote this, around 2005 or so.
