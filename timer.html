@@ -1,0 +1,263 @@
+<html>
+<head><title>Dave Aronson's Toastmaster Timer</title></head>
+<body bgcolor="blue" style="margin:.25in">
+
+<div align="center"><big>Toastmaster Timer<br>by Dave Aronson</big>
+
+<table align="center" cellpadding="5" cellspacing="1">
+ <tr bgcolor="white">
+  <td>Timeframe:</td>
+  <td>
+   <input id="timeMin" size="2" type="text" value="5">
+   to&nbsp; <input id="timeMax" size="2" type="text" value="7">
+   minutes
+  </td>
+ </tr>
+ <tr bgcolor="white">
+  <td>&nbsp;</td>
+  <td><input id="colorOnly" type="checkbox">Show colors only (not time and status)?</td>
+ </tr>
+ <tr bgcolor="white">
+  <td>Grace below min:</td>
+  <td>
+   <input id="graceLo" size="2" type="text" value="30"> seconds
+  </td>
+ </tr>
+ <tr bgcolor="white">
+  <td>Grace above max:</td>
+  <td>
+   <input id="graceHi" size="2" type="text" value="30"> seconds
+  </td>
+ </tr>
+ <tr bgcolor="white">
+  <td align="center" colspan="2">
+   <input type="Submit" id="start" onClick="startTimer();" value=" START ">
+   &nbsp;
+   <input type="button" id="stop" onClick="stopTimer();" value=" STOP ">
+   &nbsp;
+   <input type="button" id="reset" onClick="resetTimer();" value=" RESET ">
+  </td>
+ </tr>
+ <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+ <tr bgcolor="white" style="font-size:large">
+  <td><big>So far:</big></td><td><big><span id="time"></span></big></td>
+ </tr>
+ <tr bgcolor="white" style="font-size:large">
+  <td><big>Left:</big></td><td><big><span id="timeLeft"></span></big></td>
+ </tr>
+ <tr bgcolor="white" style="font-size:large">
+  <td><big>Status:</big></td><td><big><span id="qual"></span></big></td>
+ </tr>
+</table>
+
+</div>
+
+<script language="javascript">
+
+
+<!-- hide it from non-js browsers so as not to confuse them!
+
+
+ var colorOnly = 0;
+ var going = 0;        // start/stop flag
+ var lastTimeout = 0;  // returned by last setTimeout, so we can unset it
+ var timeSoFar = 0;    // elapsed time
+
+ function getElt (id) {
+   return document.getElementById (id);
+ }
+
+ function countSecond()
+ {
+  if (! going) return;
+  showStatus();
+  timeSoFar++;
+  lastTimeout = window.setTimeout (countSecond, 1000);
+ }
+
+
+ function formatTime (secs)
+ {
+  var result;
+
+  if (secs >= 0) result = "";
+  else
+  {
+   result = "-";
+   secs = -secs;
+  }
+
+  result += Math.floor (secs / 60) + ":";
+  secs = secs % 60;
+  if (secs < 10) result += "0";
+  result += secs;
+  return result;
+ }
+
+
+ function resetAbles (isInit)
+ {
+  setDisabled ("timeMin", ! isInit);
+  setDisabled ("timeMax", ! isInit);
+  setDisabled ("graceLo", ! isInit);
+  setDisabled ("graceHi", ! isInit);
+  setDisabled ("start",   ! isInit);
+  setDisabled ("stop",      isInit);
+ }
+
+
+ function resetTimer()
+ {
+  timeSoFar = 0;
+  showStatus();
+  // do NOT stop here; we may want to just reset and start counting again
+ }
+
+
+ function setDisabled (id, how)
+ {
+  getElt (id).disabled = how;
+ }
+
+
+ function showStatus()
+ {
+  var graceHi = getElt ("graceHi").value * 1;  // convert to int!
+  var graceLo = getElt ("graceLo").value * 1;  // convert to int!
+  var timeMin = getElt ("timeMin").value * 60;
+  var timeMax = getElt ("timeMax").value * 60;
+
+  if (! colorOnly)
+  {
+   getElt ("time").innerHTML = formatTime (timeSoFar);
+   getElt ("timeLeft").innerHTML = formatTime (timeMax - timeSoFar);
+  }
+
+  qual = getElt ("qual");
+
+  if (timeSoFar == 0 && timeMin != 0)  // just starting
+  {
+   if (! colorOnly) qual.innerHTML = " under ";
+   document.bgColor="blue";
+  }
+
+  else if (timeSoFar == timeMin - graceLo && ! colorOnly)
+  {
+   // do NOT set bg green here; that would be misleading!
+   qual.innerHTML = " qualified ";
+  }
+
+  else if (timeSoFar == timeMin)
+  {
+    if (! colorOnly) qual.innerHTML = " minimum ";
+    document.bgColor="green";
+  }
+
+  else if (timeSoFar == Math.floor ((timeMax + timeMin) / 2))
+  {
+   if (! colorOnly) qual.innerHTML = " halfway ";
+   document.bgColor = "yellow";
+  }
+
+  else if (timeSoFar == timeMax + 1)
+  {
+   if (! colorOnly) qual.innerHTML = " OVERTIME ";
+   document.bgColor = "red";
+  }
+
+  else if (timeSoFar == timeMax + graceHi + 1 && ! colorOnly)
+  {
+   // bg should already be red here
+   qual.innerHTML = " Disqualified! ";
+  }
+
+ }
+
+
+ function startTimer()
+ {
+  var timeMax;
+  var timeMin;
+
+  colorOnly = getElt ("colorOnly").checked;
+  if (colorOnly)
+  {
+   getElt ("time").innerHTML = "HIDDEN!";
+   getElt ("timeLeft").innerHTML = "HIDDEN!"
+   getElt ("qual").innerHTML = "HIDDEN!"
+  }
+
+  timeMin = validateIntegerElement ("timeMin");
+  if (timeMin < 0) return;
+
+  timeMax = validateIntegerElement ("timeMax");
+  if (timeMax < 0) return;
+
+  if (timeMin > timeMax)
+  {
+   alert ("Min must not be greater than max!");
+   return;
+  }
+
+  if (validateIntegerElement ("graceLo") < 0) return;
+  if (validateIntegerElement ("graceHi") < 0) return;
+
+  going = 1;
+  stopTimeouts();
+  resetAbles (false);
+  lastTimeout = window.setTimeout (countSecond, 1000);
+ }
+
+
+ function stopTimer()
+ {
+  going = 0;
+  stopTimeouts();
+  resetAbles (true);
+ }
+
+
+ function stopTimeouts()
+ {
+  if (lastTimeout != 0) clearTimeout (lastTimeout);
+ }
+
+
+ function validateInteger (s)
+ {
+  var i;
+  var len = s.length;
+
+  for (i = 0; i < len; i++)
+  {
+   var c = s[i];
+   if (c < '0' || c > '9') return 0;
+  }
+  return 1;
+ }
+
+
+ function validateIntegerElement (id)
+ {
+  val = getElt (id).value;
+  if (! validateInteger (val))
+  {
+   alert (val + " is not a valid non-negative integer!");
+   return -1;
+  }
+  return val * 1;  // return it as an int
+ }
+
+
+ resetTimer();
+ resetAbles (true);
+
+
+// end script hiding -->
+
+
+</script><noscript><big>Sorry, this timer requires JavaScript!</big></noscript>
+
+
+</body>
+</html>
